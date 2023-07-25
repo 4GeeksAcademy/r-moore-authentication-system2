@@ -1,54 +1,76 @@
-const getState = ({ getStore, getActions, setStore }) => {
-	return {
-		store: {
-			message: null,
-			demo: [
-				{
-					title: "FIRST",
-					background: "white",
-					initial: "white"
-				},
-				{
-					title: "SECOND",
-					background: "white",
-					initial: "white"
-				}
-			]
+const axios = require('axios');
+const getState =({getStore, getActions,setStore}) =>{
+	return{
+		store:{
+			token: null,
+			cf_url: 'https://r-moore98-ominous-guacamole-7q445jwqx9jfq6q-3000.preview.app.github.dev',
+			cb_url: 'https://r-moore98-ominous-guacamole-7q445jwqx9jfq6q-3001.preview.app.github.dev',
 		},
-		actions: {
-			// Use getActions to call a function within a fuction
-			exampleFunction: () => {
-				getActions().changeColor(0, "green");
-			},
+		actions:{
+			createUser: async (email, password) => {
+				const cb_url = getStore().cb_url;
+				const cf_url = getStore().cf_url;
+				const url = cb_url + "/api/signup";
+				const data = {
+					email: email,
+					password: password,
+				};
+				try {
+					const response = await axios.post(url, data)
 
-			getMessage: async () => {
-				try{
-					// fetching data from the backend
-					const resp = await fetch(process.env.BACKEND_URL + "/api/hello")
-					const data = await resp.json()
-					setStore({ message: data.message })
-					// don't forget to return something, that is how the async resolves
-					return data;
-				}catch(error){
-					console.log("Error loading message from backend", error)
+					if (response.status !== 200) {
+						alert("There has been an error");
+						return false;
+					}
+
+					const responseData = response.data;
+
+					if (responseData.status === "true") {
+						window.location.href = cf_url + "/home"
+					}
+
+					return true;
+				} catch (error) {
+					console.error(error);
 				}
 			},
-			changeColor: (index, color) => {
-				//get the store
-				const store = getStore();
 
-				//we have to loop the entire demo array to look for the respective index
-				//and change its color
-				const demo = store.demo.map((elm, i) => {
-					if (i === index) elm.background = color;
-					return elm;
-				});
+			login: async (email, password) => {
+				const cb_url = getStore().cb_url;
+				const url = cb_url + "/api/login";
+				const data = {
+					email: email,
+					password: password,
+				};
 
-				//reset the global store
-				setStore({ demo: demo });
-			}
+				try {
+					const response = await axios.post(url, data, {
+						headers: {
+							"Content-Type": "application/json"
+						},
+					});
+
+					if (response.status !== 200) {
+						alert("There has been an error");
+						return false;
+					}
+
+					const responseData = response.data;
+					sessionStorage.setItem("token", responseData.access_token);
+
+					setStore({ token: responseData.access_token, user_name: responseData.user_name });
+					return true;
+				} catch (error) {
+					console.error(error);
+				}
+			},
+			logout: async (email, password) => {
+				const cf_url = getStore.cf_url
+				const token = sessionStorage.removeItem("token");
+				setStore({ token: null });
+				window.location.href = "/";
+			},
 		}
-	};
-};
-
-export default getState;
+	}
+}
+export default getState
