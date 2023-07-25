@@ -21,7 +21,6 @@ export const Private = () => {
   return (
     <div>
       <h2>Private Page</h2>
-      <button onClick={handleLogout}>Logout</button>
     </div>
   );
 };
